@@ -34,7 +34,7 @@ class AdvancedNovaMediaLibraryServiceProvider extends ServiceProvider
         }
 
         Route::middleware(['nova'])
-            ->prefix('nova-vendor/ebess/advanced-nova-media-library')
+            ->prefix(config('app.prefix') . '/nova-vendor/ebess/advanced-nova-media-library')
             ->group(__DIR__.'/../routes/api.php');
     }
 
