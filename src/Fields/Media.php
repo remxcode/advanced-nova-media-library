@@ -348,7 +348,7 @@ class Media extends Field
         return $media->toArray();
     }
 
-    public function resolveDependentValue(NovaRequest $request)
+    public function resolveDependentValue(NovaRequest $request): mixed
     {
         $value = $this->value ?? $this->resolveDefaultValue($request);
 
