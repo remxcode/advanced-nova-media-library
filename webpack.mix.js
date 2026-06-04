@@ -1,5 +1,8 @@
 const mix = require('laravel-mix');
 const path = require('path');
+const novaPath = process.env.NOVA_PATH
+  ? path.resolve(process.env.NOVA_PATH)
+  : path.join(__dirname, '../../laravel/nova');
 
 mix.setPublicPath('dist')
   .js('resources/js/field.js', 'js').vue({version: 3})
@@ -12,7 +15,7 @@ mix.setPublicPath('dist')
     }
   })
   .alias({
-    'laravel-nova': path.join(__dirname, '../../laravel/nova/resources/js/mixins/packages.js'),
+    'laravel-nova': path.join(novaPath, 'resources/js/mixins/packages.js'),
     'axios': path.join(__dirname, 'node_modules/axios'),
     'lodash': path.join(__dirname, 'node_modules/lodash'),
     'form-backend-validation': path.join(__dirname, 'node_modules/form-backend-validation'),

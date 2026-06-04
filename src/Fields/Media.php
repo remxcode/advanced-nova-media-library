@@ -4,11 +4,13 @@ namespace Ebess\AdvancedNovaMediaLibrary\Fields;
 
 // @TODO Rule contract is deprecated since laravel/framework v10.0, replace with ValidationRule once min version is 10.
 use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Nova\Fields\Field;
+use Laravel\Nova\Fields\SupportsDependentFields;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -17,7 +19,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class Media extends Field
 {
-    use HandlesCustomPropertiesTrait, HandlesConversionsTrait, HandlesExistingMediaTrait;
+    use SupportsDependentFields, HandlesCustomPropertiesTrait, HandlesConversionsTrait, HandlesExistingMediaTrait;
 
     public $component = 'advanced-media-library-field';
 
@@ -163,6 +165,10 @@ class Media extends Field
      */
     protected function fillAttributeFromRequest(NovaRequest $request, $requestAttribute, $model, $attribute)
     {
+        if ($this->visible === false) {
+            return null;
+        }
+
         $key = str_replace($attribute, '__media__.'.$attribute, $requestAttribute);
         $data = $request[$key] ?? [];
 
@@ -340,6 +346,34 @@ class Media extends Field
         }
 
         return $media->toArray();
+    }
+
+    public function resolveDependentValue(NovaRequest $request)
+    {
+        $value = $this->value ?? $this->resolveDefaultValue($request);
+
+        return collect($value)->map(function ($media) {
+            if ($media instanceof \Spatie\MediaLibrary\MediaCollections\Models\Media) {
+                $media = $media->toArray();
+            }
+
+            if (is_object($media)) {
+                $media = get_object_vars($media);
+            }
+
+            if (! is_array($media)) {
+                return null;
+            }
+
+            return array_filter(Arr::only($media, [
+                'id',
+                'uuid',
+                'name',
+                'file_name',
+            ]), function ($value) {
+                return $value !== null && $value !== '';
+            });
+        })->filter()->values()->all();
     }
 
     /**
